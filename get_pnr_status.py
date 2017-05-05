@@ -30,7 +30,7 @@ def make_request(pnr = None, use_proxy = False):
             proxies = json.loads(f.read())
     if pnr is not None: data["lccp_pnrno1"] = pnr
     resp = requests.post(url, timeout = 30, proxies = proxies, data = data, headers = headers)
-    print "status", resp.status_code
+    # print "status", resp.status_code
     # print "headers", resp.request.headers
     # print "body", resp.request.body
     # print "repsonse headers", resp.headers
@@ -75,22 +75,25 @@ def create_table_str(rows):
 
 def create_data_str(data):
     output = ""
-    output += "PNR Number:" + data["PNR Number"]
-    output += "\n\n"
+    if data["status"] != "failed":
+        output += "PNR Number:" + data["PNR Number"]
+        output += "\n\n"
 
-    output += "train info:\n"
-    output += create_table_str(data["train"])
-    output += "\n"
+        output += "train info:\n"
+        output += create_table_str(data["train"])
+        output += "\n"
 
-    output += "passenger info:\n"
-    output += create_table_str(data["passengers"])
-    output += "\n"
+        output += "passenger info:\n"
+        output += create_table_str(data["passengers"])
+        output += "\n"
 
-    output += "Other info:"
-    for item in data["other info"]:
-        for k, v in item.items():
-            output += k + ": " + v + "\n"
-    output += "\n"
+        output += "Other info:"
+        for item in data["other info"]:
+            for k, v in item.items():
+                output += k + ": " + v + "\n"
+        output += "\n"
+    else:
+        output += data["message"]
     return output
 
 # assumes data in format:
@@ -152,11 +155,15 @@ def parse(content):
                 others.append(ret)
         result["other info"] = others
 
+        result["status"] = "successful"
         # print json.dumps(result, indent = 2)
         return result
     else:
-        return "unable to find the required text"
-        exit(1)
+        result = {
+            "status": "failed",
+            "message": "unable to find the required text"
+        }
+        return result
 
 def parse_from_file(file_name):
     # read from file to parse html
