@@ -23,29 +23,6 @@ data = {
     "submit": "Please Wait..."
 }
 
-def print_table(rows):
-    # print rows
-    output_template = "{{:<{}}}"
-    header_lens = {}
-    tr_values_list = []
-    for row in rows:
-        trs = row.find_all("td")
-        tr_values = []
-        for i in range(len(trs)):
-            tr = trs[i]
-            tr_values.append(tr.text)
-            header_lens[i] = max(header_lens.get(i, 0), len(tr.text))
-        tr_values_list.append(tr_values)
-        # print output_template.format(*tr_values)
-    new_header_lens = [None] * (len(header_lens))
-    for k, v in header_lens.items():
-        new_header_lens[k] = v + 5
-
-    output_template = (output_template*len(new_header_lens)).format(*new_header_lens)
-    for tr_values in tr_values_list:
-        print output_template.format(*tr_values)
-    print
-
 def make_request(pnr = None, use_proxy = False):
     proxies = None
     if use_proxy:
@@ -69,35 +46,116 @@ def make_request(pnr = None, use_proxy = False):
 
     return resp.content
 
-def parse_and_show(content):
+def create_table_str(rows):
+    output = ""
+    headers = rows[0].keys()
+    header_locs = {}
+    header_lens = []
+    for i in range(len(headers)):
+        header_locs[headers[i]] = i
+        header_lens.append(len(headers[i]))
+    vals = []
+    for row in rows:
+        val = [0]*len(row)
+        for k, v in row.items():
+            idx = header_locs[k]
+            val[idx] = v
+            header_lens[idx] = max(header_lens[idx], len(v))
+        vals.append(val)
+    del header_locs
+
+    header_lens = [i+5 for i in header_lens]
+    vals.insert(0, headers)
+    output_template = "{{:<{}}}"
+    output_template = (output_template*len(header_lens)).format(*header_lens)
+    for val in vals:
+        output += output_template.format(*val)
+        output += "\n"
+    return output
+
+def create_data_str(data):
+    output = ""
+    output += "PNR Number:" + data["PNR Number"]
+    output += "\n\n"
+
+    output += "train info:\n"
+    output += create_table_str(data["train"])
+    output += "\n"
+
+    output += "passenger info:\n"
+    output += create_table_str(data["passengers"])
+    output += "\n"
+
+    output += "Other info:"
+    for item in data["other info"]:
+        for k, v in item.items():
+            output += k + ": " + v + "\n"
+    output += "\n"
+    return output
+
+# assumes data in format:
+# each row is inside a tr tag and each tr tag has multiple td tags
+# if there is only one tr tag and there are 2 td tags then assume key value pair
+def parse_table(rows):
+    result = None
+    headers = []
+    if len(rows) == 1:
+        tds = rows[0].find_all("td")
+        if len(tds) == 2:
+            result = {}
+            result[tds[0].text.strip()] = tds[1].text.strip()
+    else:
+        result = []
+        for i in range(len(rows)):
+            row = rows[i]
+            trs = row.find_all("td")
+            single_row = {}
+            for j in range(len(trs)):
+                tr = trs[j]
+                if i == 0:
+                    headers.append(tr.text.strip())
+                else:
+                    single_row[headers[j]] = tr.text.strip()
+            if i != 0: result.append(single_row)
+    return result
+
+# will parse the html content into a json
+def parse(content):
     soup = bs(content, 'html.parser')
+    r = re.compile("You Queried For.:")
+
     # starting tag
-    tag1 = soup.find("td", text = re.compile("You Queried For."))
+    tag1 = soup.find("td", text = r)
     if tag1 is not None:
-        print tag1.text.strip().replace("\n", "").replace("\r", "")
-        print
+        result = {}
+        pnr_str = tag1.text.strip().replace("\n", "").replace("\r", "")
+        pnr = [i.strip() for i in r.sub("", pnr_str).strip().split(":")]
+        result[pnr[0]] = pnr[1]
 
         # first table of interest
         rows = tag1.find_next("table").find_all("tr")
         rows = rows[1:]
-        print "train info:"
-        print_table(rows)
+        result["train"] = parse_table(rows)
 
         # second table of interest
         # PASSENGER list
         rows = tag1.find_next("table").find_next("table").find_next("table").find_all("tr")
         other_info = rows[-3:]
-
         # actual passenger list
         rows = rows[:-3]
-        print "passenger info:"
-        print_table(rows)
+        result["passengers"] = parse_table(rows)
 
-        print "other info:"
+        others = []
         for info in other_info:
-            print_table([info])
+            ret = parse_table([info])
+            if ret is not None:
+                others.append(ret)
+        result["other info"] = others
+
+        # print json.dumps(result, indent = 2)
+        return result
     else:
-        print "unable to find the required text"
+        return "unable to find the required text"
         exit(1)
 
 def parse_from_file(file_name):
@@ -105,10 +163,11 @@ def parse_from_file(file_name):
     content = ""
     with open(file_name) as f:
         content = f.read()
-    parse_and_show(content)
+    print create_data_str(parse(content))
+    # parse_and_show(content)
 
 def check_pnr(pnr = None, use_proxy = False):
-    parse_and_show(make_request(pnr, use_proxy))
+    print create_data_str(parse(make_request(pnr, use_proxy)))
 
 def usage():
     print "usage:\n\t", sys.argv[0], "<pnr>"
