@@ -38,11 +38,11 @@ def make_request(pnr = None, use_proxy = False):
     # print dir(resp)
     # print resp.content
 
-    with open("result.html", 'w') as f:
-        f.write(resp.content)
-    soup = bs(resp.content, 'html.parser')
-    with open("formattedresult.html", 'w') as f:
-        f.write(soup.prettify().encode('UTF-8'))
+    # with open("result.html", 'w') as f:
+    #     f.write(resp.content)
+    # soup = bs(resp.content, 'html.parser')
+    # with open("formattedresult.html", 'w') as f:
+    #     f.write(soup.prettify().encode('UTF-8'))
 
     return resp.content
 
@@ -87,7 +87,7 @@ def create_data_str(data):
         output += create_table_str(data["passengers"])
         output += "\n"
 
-        output += "Other info:"
+        output += "Other info:\n"
         for item in data["other info"]:
             for k, v in item.items():
                 output += k + ": " + v + "\n"
@@ -172,6 +172,12 @@ def parse_from_file(file_name):
         content = f.read()
     print create_data_str(parse(content))
     # parse_and_show(content)
+
+def pnr_status_json(pnr):
+    return json.dumps(parse(make_request(pnr)))
+
+def pnr_status_text(pnr):
+    return create_data_str(parse(make_request(pnr)))
 
 def check_pnr(pnr = None, use_proxy = False):
     print create_data_str(parse(make_request(pnr, use_proxy)))
