@@ -1,6 +1,7 @@
 import BaseHTTPServer
 import re
 import get_pnr_status
+import os
 
 # need to create a server
 # then that server will need a handler to
@@ -57,6 +58,7 @@ class MyClass(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(ret)
         self.wfile.flush()
 
-server_address = ('', 8000)
+port = int(os.environ.get("PORT", 8000))
+server_address = ('', port)
 httpd = BaseHTTPServer.HTTPServer(server_address, MyClass)
 httpd.serve_forever()
