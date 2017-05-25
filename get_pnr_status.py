@@ -76,7 +76,7 @@ def create_table_str(rows):
 def create_data_str(data):
     output = ""
     if data["status"] != "failed":
-        output += "PNR Number:" + data["PNR Number"]
+        output += "PNR Number:" + data["PNR"]
         output += "\n\n"
 
         output += "train info:\n"
@@ -88,7 +88,7 @@ def create_data_str(data):
         output += "\n"
 
         output += "Other info:\n"
-        for item in data["other info"]:
+        for item in data.get("other_info", []):
             for k, v in item.items():
                 output += k + ": " + v + "\n"
         output += "\n"
@@ -133,7 +133,7 @@ def parse(content):
         result = {}
         pnr_str = tag1.text.strip().replace("\n", "").replace("\r", "")
         pnr = [i.strip() for i in r.sub("", pnr_str).strip().split(":")]
-        result[pnr[0]] = pnr[1]
+        result["PNR"] = pnr[1]
 
         # first table of interest
         rows = tag1.find_next("table").find_all("tr")
@@ -153,7 +153,7 @@ def parse(content):
             ret = parse_table([info])
             if ret is not None:
                 others.append(ret)
-        result["other info"] = others
+        result["other_info"] = others
 
         result["status"] = "successful"
         # print json.dumps(result, indent = 2)
