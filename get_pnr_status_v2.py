@@ -170,8 +170,7 @@ def checkPnrStatus(pnr, astext = False):
                 break
             else:
                 print 'error:', pnr_data["errorMessage"]
-    response = createResponse(pnr_data, astext)
-    return repsonse
+    return createResponse(pnr_data, astext)
 
 def createResponseFromFile(fname, astext = False):
     content = None
@@ -192,7 +191,7 @@ if __name__ == "__main__":
         use_proxy = True
     pnr = inp[1]
     if pnr.isdigit():
-        checkPnrStatus(pnr = pnr)
+        print checkPnrStatus(pnr = pnr, astext = True)
     else:
         print "reading from file:", pnr
         createResponseFromFile(pnr, astext = False)
