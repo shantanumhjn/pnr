@@ -1,6 +1,6 @@
 import BaseHTTPServer
 import re
-import get_pnr_status
+import get_pnr_status_v2
 import os
 
 # need to create a server
@@ -42,9 +42,10 @@ class MyClass(BaseHTTPServer.BaseHTTPRequestHandler):
         if path_status == 200:
             headers["Content-Type"] = "text/plain"
             if ret_type == "json":
-                ret = get_pnr_status.pnr_status_json(pnr)
+                headers['Content-Type'] = 'application/json'
+                ret = get_pnr_status_v2.checkPnrStatus(pnr = pnr)
             else:
-                ret = get_pnr_status.pnr_status_text(pnr)
+                ret = get_pnr_status_v2.checkPnrStatus(pnr = pnr, astext = True)
         elif path_status == 422:
             ret = "Missing or invalid query param\n"
         else:
