@@ -12,22 +12,16 @@ from get_pnr_status import create_data_str
 # with open('test_proxy.json') as f:
 #     proxies = json.loads(f.read())
 
-pnr = 4331777966
-
 url1 = 'http://www.indianrail.gov.in/enquiry/PnrEnquiry.html'
 url2 = 'http://www.indianrail.gov.in/enquiry/CommonCaptcha'
 data = {
     "inputCaptcha": 0000,
-    "inputPnrNo": pnr,
+    "inputPnrNo": 0000,
     "inputPage": 'PNR'
 }
 url3 = 'http://www.indianrail.gov.in/enquiry/captchaDraw.png?'
 
 headers = {
-    # 'Referer': url1,
-    'Host': 'www.indianrail.gov.in',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-    'X-Requested-With': 'XMLHttpRequest'
 }
 
 def create_session():
