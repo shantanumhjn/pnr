@@ -38,6 +38,7 @@ class MyClass(BaseHTTPServer.BaseHTTPRequestHandler):
         path_status, pnr, ret_type = self.check_path()
         self.send_response(path_status)
         headers = {}
+        headers["Access-Control-Allow-Origin"] = "*"
         ret = None
         if path_status == 200:
             headers["Content-Type"] = "text/plain"
