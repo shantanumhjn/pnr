@@ -143,6 +143,8 @@ def createResponse(data, astext = False):
     # print '\n\n'
     if astext:
         result = create_data_str(result)
+    else:
+        result = json.dumps(result)
     return result
 
 def checkPnrStatus(pnr, astext = False):
